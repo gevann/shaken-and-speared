@@ -8,7 +8,17 @@ import (
 	"testing"
 )
 
+func setupTestDB(t *testing.T) {
+	var err error
+	db, err = initDB(":memory:")
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+}
+
 func TestStatusHandler(t *testing.T) {
+	setupTestDB(t)
+	defer db.Close()
 	req := httptest.NewRequest(http.MethodGet, "/api/status", nil)
 	w := httptest.NewRecorder()
 	statusHandler(w, req)
@@ -27,6 +37,8 @@ func TestStatusHandler(t *testing.T) {
 }
 
 func TestWeekHandler(t *testing.T) {
+	setupTestDB(t)
+	defer db.Close()
 	req := httptest.NewRequest(http.MethodGet, "/api/game/week", nil)
 	w := httptest.NewRecorder()
 	weekHandler(w, req)
@@ -47,6 +59,8 @@ func TestWeekHandler(t *testing.T) {
 }
 
 func TestWordHandler(t *testing.T) {
+	setupTestDB(t)
+	defer db.Close()
 	body := bytes.NewBufferString(`{"word":"test"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/game/word", body)
 	w := httptest.NewRecorder()
@@ -63,5 +77,13 @@ func TestWordHandler(t *testing.T) {
 	expected := "Received word test"
 	if resp["message"] != expected {
 		t.Errorf("expected %q got %q", expected, resp["message"])
+	}
+
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM words WHERE word=?", "test").Scan(&count); err != nil {
+		t.Fatalf("query failed: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("expected 1 row in words table, got %d", count)
 	}
 }
