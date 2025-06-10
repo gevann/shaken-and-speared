@@ -21,6 +21,10 @@ This repository contains a scaffold for a weekly word game. Each player receives
    ./wordgame
    ```
 
+   The backend uses SQLite for persistent storage. A database file `wordgame.db`
+   will be created automatically in the working directory when the server starts.
+   Ensure the process has write access to this directory.
+
 The server runs on port `3000` by default and exposes the following placeholder endpoints:
 
 - `GET /api/status` – health check.
